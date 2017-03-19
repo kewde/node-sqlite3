@@ -131,8 +131,8 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 dumpbin /DEPENDENTS "%NODE_EXE%"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-dumpbin /DEPENDENTS "%MODULE%"
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+REM dumpbin /DEPENDENTS "%MODULE%"
+REM IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
 ::skipping check for errorlevel npm test result when using io.js
