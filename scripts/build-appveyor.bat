@@ -126,6 +126,8 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 CALL npm install --build-from-source --msvs_version=%msvs_version% %TOOLSET_ARGS% --loglevel=http
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+ECHO module file^:
+CALL node_modules\.bin\node-pre-gyp reveal module %TOOLSET_ARGS% --silent
 FOR /F "tokens=*" %%i in ('CALL node_modules\.bin\node-pre-gyp reveal module %TOOLSET_ARGS% --silent') DO SET MODULE=%%i
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 FOR /F "tokens=*" %%i in ('node -e "console.log(process.execPath)"') DO SET NODE_EXE=%%i
