@@ -161,8 +161,10 @@ ECHO installing electron
 CALL npm install -g "electron@%NODE_RUNTIME_VERSION%"
 ECHO installing electron-mocha
 CALL npm install -g electron-mocha
+ECHO preparing tests
+CALL electron "./test/support/createdb.js"
 ECHO calling electron-mocha
-CALL electron-mocha -R spec --timeout 480000 --require-main "./test/support/createdb.js"
+CALL electron-mocha -R spec --timeout 480000
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 GOTO NPM_TEST_FINISHED
 
