@@ -5,10 +5,13 @@ skip_tags: true
 
 environment:
   matrix:
+    # electron
     - nodejs_version: 6
       platform: x64
       msvs_toolset: 12
-      TOOLSET_ARGS: --runtime=electron --target=1.6.0 --dist-url=https://atom.io/download/electron
+      NODE_RUNTIME: electron
+      NODE_RUNTIME_VERSION: 1.6.3
+      TOOLSET_ARGS: --dist-url=https://atom.io/download/electron
 
 os: Visual Studio 2015
 
