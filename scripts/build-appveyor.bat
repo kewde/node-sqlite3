@@ -164,11 +164,10 @@ CALL npm install -g electron-mocha
 ECHO preparing tests
 (
     ECHO var {app} = require('electron'^);
-    ECHO require('./createdb.js'^);
-    ECHO app.quit(^);
-) >"test/support/createdb-electron.js"
+    ECHO require('./createdb.js'^)(function (^) { app.quit(^); }^);
+) >"test\support\createdb-electron.js"
 CALL electron "test/support/createdb-electron.js"
-DEL "test/support/createdb-electron.js"
+DEL "test\support\createdb-electron.js"
 ECHO calling electron-mocha
 CALL electron-mocha -R spec --timeout 480000
 GOTO ERROR
