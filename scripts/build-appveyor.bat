@@ -162,10 +162,10 @@ CALL npm install -g "electron@%NODE_RUNTIME_VERSION%"
 ECHO installing electron-mocha
 CALL npm install -g electron-mocha
 ECHO preparing tests
-CALL (
+(
     ECHO require('./test/support/createdb.js'^);
     ECHO .EXIT
-) | electron -i
+) | CALL electron -i
 ECHO calling electron-mocha
 CALL electron-mocha -R spec --timeout 480000
 GOTO ERROR
