@@ -33,7 +33,9 @@ function createdb(callback) {
                 stmt.run(i, randomString());
             }
             stmt.finalize();
-            db.run("COMMIT TRANSACTION", [], callback);
+            db.run("COMMIT TRANSACTION", [], function () {
+                db.close(callback);
+            });
         });
     }
 };
