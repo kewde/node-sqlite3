@@ -170,7 +170,6 @@ CALL electron "test/support/createdb-electron.js"
 DEL "test\support\createdb-electron.js"
 ECHO calling electron-mocha
 CALL electron-mocha -R spec --timeout 480000
-GOTO ERROR
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 GOTO NPM_TEST_FINISHED
 
