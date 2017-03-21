@@ -2,7 +2,7 @@
 
 source ~/.nvm/nvm.sh
 
-set -e -u
+set -e -u -x
 
 GYP_ARGS="--runtime=electron --target=${ELECTRON_VERSION}"
 
@@ -17,7 +17,9 @@ function publish() {
 
 function electron_pretest() {
     npm install electron
+    echo $?
     npm install electron-mocha
+    echo $?
 }
 
 function electron_test() {
@@ -29,8 +31,11 @@ function electron_test() {
 
 # test installing from source
 npm install --build-from-source  --clang=1 $GYP_ARGS
+echo $?
 electron_pretest
+echo $?
 electron_test
+echo $?
 
 
 publish
