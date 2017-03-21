@@ -4,7 +4,7 @@ source ~/.nvm/nvm.sh
 
 set -e -u -x
 
-GYP_ARGS="--runtime=electron --target=${ELECTRON_VERSION}"
+GYP_ARGS="--runtime=electron --target=${ELECTRON_VERSION} --dist-url=https://atom.io/download/electron"
 export DISPLAY=":99.0"
 
 function publish() {
