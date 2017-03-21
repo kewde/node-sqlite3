@@ -23,6 +23,9 @@ function electron_pretest() {
 }
 
 function electron_test() {
+    echo $(npm bin)
+    ls -l $(npm bin)
+    ls -l test/support/
     echo "var {app} = require('electron'); require('./createdb.js')(function () { app.quit(); });" >test/support/createdb-electron.js
     "$(npm bin)"/electron test/support/createdb-electron.js
     rm test/support/createdb-electron.js
