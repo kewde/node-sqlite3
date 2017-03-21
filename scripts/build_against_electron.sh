@@ -5,6 +5,7 @@ source ~/.nvm/nvm.sh
 set -e -u -x
 
 GYP_ARGS="--runtime=electron --target=${ELECTRON_VERSION}"
+export DISPLAY=":99.0"
 
 function publish() {
     if [[ ${PUBLISHABLE:-false} == true ]] && [[ ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
@@ -20,6 +21,9 @@ function electron_pretest() {
     echo $?
     npm install electron-mocha
     echo $?
+    sh -e /etc/init.d/xvfb start
+    echo $?
+    sleep 3
 }
 
 function electron_test() {
