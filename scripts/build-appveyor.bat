@@ -4,9 +4,16 @@ SET EL=0
 
 ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+IF /I "%msvs_toolset%"=="" ECHO msvs_toolset unset, defaulting to 12 && SET msvs_toolset=12
+SET NODE_MAJOR=%nodejs_version:~0,1%
+IF %NODE_MAJOR% GTR 4 ECHO detected node v5, forcing msvs_toolset 14 && SET msvs_toolset=14
+
 SET PATH=%CD%;%PATH%
 SET msvs_version=2013
 IF "%msvs_toolset%"=="14" SET msvs_version=2015
+IF NOT "%NODE_RUNTIME%"=="" SET "TOOLSET_ARGS=%TOOLSET_ARGS% --runtime=%NODE_RUNTIME%"
+IF NOT "%NODE_RUNTIME_VERSION%"=="" SET "TOOLSET_ARGS=%TOOLSET_ARGS% --target=%NODE_RUNTIME_VERSION%"
+
 
 ECHO APPVEYOR^: %APPVEYOR%
 ECHO nodejs_version^: %nodejs_version%
@@ -42,22 +49,15 @@ IF /I "%platform%"=="x64" powershell Install-Product node $env:nodejs_version x6
 IF /I "%platform%"=="x86" powershell Install-Product node $env:nodejs_version x86
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-SET NODE_MAJOR=%nodejs_version:~0,1%
 ECHO node major version^: %NODE_MAJOR%
 IF %NODE_MAJOR% GTR 0 ECHO node version greater than zero, not updating npm && GOTO SKIP_APPVEYOR_INSTALL
 
 powershell Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-CALL npm install --global --production npm-windows-upgrade
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-REM https://ci.appveyor.com/project/Mapbox/node-sqlite3/build/1.0.500/job/n2y9fo4eg316db56#L289
-REM error C2373: '__pfnDliNotifyHook2': redefinition; different type modifiers
-REM at least 2.15.9 is needed: https://github.com/nodejs/node-gyp/issues/972#issuecomment-231055109
-CALL npm-windows-upgrade --npm-version 2.15.9 --no-dns-check --no-prompt
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 :SKIP_APPVEYOR_INSTALL
 IF /I "%msvs_toolset%"=="12" GOTO NODE_INSTALLED
+IF %NODE_MAJOR% GTR 4 GOTO NODE_INSTALLED
 
 
 ::custom node for VS2015
@@ -117,14 +117,17 @@ IF /I "%NPM_BIN_DIR%"=="%CD%" ECHO ERROR npm bin -g equals local directory && SE
 ECHO ===== where npm puts stuff END ============
 
 
-ECHO installing node-gyp
-CALL npm install -g node-gyp
+IF "%nodejs_version:~0,1%"=="0" CALL npm install https://github.com/springmeyer/node-gyp/tarball/v3.x
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF "%nodejs_version:~0,1%"=="4" CALL npm install node-gyp@3.x
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF "%nodejs_version:~0,1%"=="5" CALL npm install node-gyp@3.x
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 CALL npm install --build-from-source --msvs_version=%msvs_version% %TOOLSET_ARGS% --loglevel=http
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-FOR /F "tokens=*" %%i in ('CALL node_modules\.bin\node-pre-gyp reveal module --silent') DO SET MODULE=%%i
+FOR /F "tokens=*" %%i in ('"CALL node_modules\.bin\node-pre-gyp reveal module %TOOLSET_ARGS% --silent"') DO SET MODULE=%%i
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 FOR /F "tokens=*" %%i in ('node -e "console.log(process.execPath)"') DO SET NODE_EXE=%%i
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -134,6 +137,8 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 dumpbin /DEPENDENTS "%MODULE%"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+
+IF "%NODE_RUNTIME%"=="electron" GOTO CHECK_ELECTRON_TEST_ERRORLEVEL
 
 ::skipping check for errorlevel npm test result when using io.js
 ::@springmeyer: how to proceed?
@@ -152,14 +157,27 @@ ECHO ==========================================
 GOTO NPM_TEST_FINISHED
 
 
+:CHECK_ELECTRON_TEST_ERRORLEVEL
+ECHO installing electron
+CALL npm install -g "electron@%NODE_RUNTIME_VERSION%"
+ECHO installing electron-mocha
+CALL npm install -g electron-mocha
+ECHO preparing tests
+CALL electron "test/support/createdb-electron.js"
+DEL "test\support\createdb-electron.js"
+ECHO calling electron-mocha
+CALL electron-mocha -R spec --timeout 480000
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+GOTO NPM_TEST_FINISHED
+
+
 :CHECK_NPM_TEST_ERRORLEVEL
 ECHO calling npm test
 CALL npm test
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 :NPM_TEST_FINISHED
-
-
+ECHO packaging for node-gyp
 CALL node_modules\.bin\node-pre-gyp package %TOOLSET_ARGS%
 ::make commit message env var shorter
 SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
